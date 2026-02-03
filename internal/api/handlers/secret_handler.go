@@ -1,30 +1,12 @@
 package handlers
 
-import (
-	"github.com/gin-gonic/gin"
-)
+import "golang.org/x/crypto/bcrypt"
 
-type SecretHandler struct {
-	service SecretService
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
-func (h *SecretHandler) Create(c *gin.Context) {
-	userID := c.GetString("user_id")
-
-	var req struct {
-		Data string `json:"data" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "invalid request"})
-		return
-	}
-
-	id, err := h.service.Create(c.Request.Context(), userID, req.Data)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "failed to store secret"})
-		return
-	}
-
-	c.JSON(201, gin.H{"id": id})
+func checkPassword(hash, password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
