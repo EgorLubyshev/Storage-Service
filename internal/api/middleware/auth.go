@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,31 +10,31 @@ import (
 )
 
 func RequireAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := extractToken(c)
+	return func(ctx *gin.Context) {
+		token := extractToken(ctx)
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
+			ctx.Abort()
 			return
 		}
 
 		userID, err := strconv.ParseInt(token, 10, 64)
 		if err != nil || userID <= 0 {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			c.Abort()
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("invalid token: '%s'", token)})
+			ctx.Abort()
 			return
 		}
 
-		c.Set("user_id", userID)
-		c.Next()
+		ctx.Set("user_id", userID)
+		ctx.Next()
 	}
 }
 
-func extractToken(c *gin.Context) string {
-	auth := c.GetHeader("Authorization")
-	if strings.HasPrefix(auth, "Bearer ") {
-		return strings.TrimSpace(strings.TrimPrefix(auth, "Bearer "))
+func extractToken(ctx *gin.Context) string {
+	auth := ctx.GetHeader("Authorization")
+	if token, ok := strings.CutPrefix(auth, "Bearer "); ok {
+		return token
 	}
 
-	return strings.TrimSpace(c.GetHeader("x-user-token"))
+	return strings.TrimSpace(ctx.GetHeader("x-user-token"))
 }

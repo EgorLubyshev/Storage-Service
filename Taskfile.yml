@@ -1,0 +1,43 @@
+version: "3"
+
+dotenv: [".task.env"]
+
+tasks:
+    genna:
+        desc: Generate models
+        cmds:
+            #            - genna model -w -c $OKX_DB_DSN -o ./internal/model/genna.go -t $DB_NAME.* --custom-types="uuid:github.com/google/uuid.UUID,candleperiod:gitlab.com/lubyshev/okx/internal/model.CandlePeriod,okx.okx.algo_name:internal/model.AlgoName"
+            - genna model -w -c $OKX_DB_DSN -o ./internal/model/genna.go -t $DB_NAME.* --uuid
+        #            - genna validation -w -f -c $OKX_DB_DSN -o ./internal/model/genna_validation.go -t $DB_NAME.* --uuid
+        silent: false
+
+    lint:
+        desc: Lint go code
+        cmds:
+            - gofumpt -l -w .
+            - golangci-lint run ./... -v
+        silent: true
+
+    migrate-create:
+        desc: Create database migrations on portal schema
+        cmds:
+            - goose -dir $DB_MIG_PATH create new_action sql
+        silent: true
+
+    migrate-up:
+        desc: Run database migrations (up)
+        cmds:
+            - goose -dir $DB_MIG_PATH postgres "host=$DB_HOST user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME search_path=$DB_PATH sslmode=disable" up
+        silent: true
+
+    migrate-down:
+        desc: Run database migrations (down)
+        cmds:
+            - goose -dir $DB_MIG_PATH postgres "host=$DB_HOST user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME search_path=$DB_PATH sslmode=disable" down
+        silent: true
+
+    migrate-reset:
+        desc: Run database migrations (reset)
+        cmds:
+            - goose -dir $DB_MIG_PATH postgres "host=$DB_HOST user=$DB_USER password=$DB_PASSWORD dbname=$DB_NAME search_path=$DB_PATH sslmode=disable" reset
+        silent: true
