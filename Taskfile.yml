@@ -7,7 +7,7 @@ tasks:
         desc: Generate models
         cmds:
             #            - genna model -w -c $OKX_DB_DSN -o ./internal/model/genna.go -t $DB_NAME.* --custom-types="uuid:github.com/google/uuid.UUID,candleperiod:gitlab.com/lubyshev/okx/internal/model.CandlePeriod,okx.okx.algo_name:internal/model.AlgoName"
-            - genna model -w -c $OKX_DB_DSN -o ./internal/model/genna.go -t $DB_NAME.* --uuid
+            - genna model -w -c $DB_DSN -o ./internal/domain/v1/genna.go -t $DB_NAME.* --uuid
         #            - genna validation -w -f -c $OKX_DB_DSN -o ./internal/model/genna_validation.go -t $DB_NAME.* --uuid
         silent: false
 

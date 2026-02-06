@@ -14,11 +14,27 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
-      - postgres-network
-
+      - service-network
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # MinIO Console (веб-интерфейс)
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    restart: unless-stopped
+    networks:
+      - service-network
 volumes:
   postgres_data:
+  minio_data:
+ 
 
 networks:
-  postgres-network:
+  service-network:
     driver: bridge
