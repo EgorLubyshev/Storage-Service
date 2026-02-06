@@ -43,7 +43,7 @@ function GetRegisterForm() {
 
 
 function LoginClick() {
-    const username = document.getElementById('loginUsername').value;
+    const username = document.getElementById('loginName').value;
     const password = document.getElementById('loginPassword').value;
 
     if (!username || !password) {
@@ -59,7 +59,7 @@ function LoginClick() {
 
     Ajax(
         'http://localhost:8080/api/v1/user/login',
-        "POST", JSON.stringify({"login": username, "password": password}),
+        "POST", JSON.stringify({"name": username, "password": password}),
         function (x) {
             App.UserToken = x.getResponseHeader("x-user-token");
          
@@ -74,7 +74,7 @@ function LoginClick() {
 
 
 function RegClick() {
-    const login = document.getElementById('regLogin').value;
+    const login = document.getElementById('regName').value;
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
 
@@ -92,9 +92,10 @@ function RegClick() {
 
     Ajax(
         'http://localhost:8080/api/v1/user/register',
-        "POST", JSON.stringify({"login": login, "password": password, "confirm": confirmPassword}),
+        "POST", JSON.stringify({"name": login, "password": password, "confirm": confirmPassword}),
         function (x) {
-            console.log("Регистрация завершена");
+            console.log("Регистрация завершена");
+
             App.UserToken = x.getResponseHeader("x-user-token");
             getLobby();
         },
@@ -122,6 +123,71 @@ function getLobby() {
           
         },
     )
+}
+
+function SendLobbyData() {
+    const input = document.getElementById('lobbyData');
+    const status = document.getElementById('lobbyDataStatus');
+    const data = input ? input.value.trim() : '';
+
+    if (!data) {
+        alert('Необходимо ввести данные для отправки');
+        return;
+    }
+
+    Ajax(
+        'http://localhost:8080/api/v1/lobby/data',
+        "POST", JSON.stringify({"data": data}),
+        function (x) {
+            const resp = JSON.parse(x.responseText);
+            if (status) {
+                status.innerText = "Отправлено: " + resp.modified + " (len=" + resp.length + ")";
+            }
+        },
+        function (x) {
+            if (status) {
+                status.innerText = "Ошибка: " + x.responseText;
+            }
+        },
+    )
+}
+
+function UploadLobbyFiles() {
+    const input = document.getElementById('lobbyFiles');
+    const status = document.getElementById('lobbyFilesStatus');
+
+    if (!input || !input.files || input.files.length === 0) {
+        alert(' Пожалуйста, выберите файлы для загрузки');
+        return;
+    }
+
+    const form = new FormData();
+    for (let i = 0; i < input.files.length; i++) {
+        form.append('files', input.files[i]);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const resp = JSON.parse(xhr.responseText);
+                if (status) {
+                    const names = resp.files.map(f => f.name + " (" + f.size + " bytes)").join(", ");
+                    status.innerText = "Загружено: " + names;
+                }
+            } else {
+                if (status) {
+                    status.innerText = "Ошибка: " + xhr.responseText;
+                }
+            }
+        }
+    };
+
+    xhr.open("POST", "http://localhost:8080/api/v1/lobby/files", false);
+    if (App.UserToken != null) {
+        xhr.setRequestHeader("Authorization", "Bearer " + App.UserToken);
+    }
+    xhr.send(form);
 }
  function  CreateGame(){
     Ajax(

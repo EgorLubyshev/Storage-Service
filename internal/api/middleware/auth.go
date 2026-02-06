@@ -3,7 +3,6 @@ package middleware
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -18,14 +17,13 @@ func RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := strconv.ParseInt(token, 10, 64)
-		if err != nil || userID <= 0 {
+		if !isUUID(token) {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("invalid token: '%s'", token)})
 			ctx.Abort()
 			return
 		}
 
-		ctx.Set("user_id", userID)
+		ctx.Set("user_id", token)
 		ctx.Next()
 	}
 }
@@ -37,4 +35,25 @@ func extractToken(ctx *gin.Context) string {
 	}
 
 	return strings.TrimSpace(ctx.GetHeader("x-user-token"))
+}
+
+func isUUID(value string) bool {
+	if len(value) != 36 {
+		return false
+	}
+
+	for i, r := range value {
+		switch i {
+		case 8, 13, 18, 23:
+			if r != '-' {
+				return false
+			}
+		default:
+			if (r < '0' || r > '9') && (r < 'a' || r > 'f') && (r < 'A' || r > 'F') {
+				return false
+			}
+		}
+	}
+
+	return true
 }

@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 	"github.com/your-username/storage-service/internal/api"
 )
 
@@ -20,6 +20,7 @@ func main() {
 	_ = godotenv.Load()
 
 	dsn := os.Getenv("DATABASE_URL")
+	log.Println("DATABASE_URL:", dsn)
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is required (e.g. postgres://user:pass@localhost:5432/storage?sslmode=disable)")
 	}

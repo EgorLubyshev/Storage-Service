@@ -15,24 +15,24 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) Create(ctx context.Context, login, passwordHash string) (int64, error) {
-	var id int64
+func (r *UserRepo) Create(ctx context.Context, name, passwordHash string) (string, error) {
+	var id string
 	err := r.db.QueryRowContext(
 		ctx,
-		`INSERT INTO users (login, password_hash) VALUES ($1, $2) RETURNING id`,
-		login,
+		`INSERT INTO users (name, password_hash) VALUES ($1, $2) RETURNING id`,
+		name,
 		passwordHash,
 	).Scan(&id)
 	return id, err
 }
 
-func (r *UserRepo) GetByLogin(ctx context.Context, login string) (*models.User, error) {
+func (r *UserRepo) GetByName(ctx context.Context, name string) (*models.User, error) {
 	var user models.User
 	err := r.db.QueryRowContext(
 		ctx,
-		`SELECT id, login, password_hash, created_at FROM users WHERE login = $1`,
-		login,
-	).Scan(&user.ID, &user.Login, &user.PasswordHash, &user.CreatedAt)
+		`SELECT id, name, password_hash, rights, created_at FROM users WHERE name = $1`,
+		name,
+	).Scan(&user.ID, &user.Name, &user.PasswordHash, &user.Rights, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
